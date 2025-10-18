@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: balance-app
+    env: node
+    region: oregon
+    plan: free
+    buildCommand: "cd frontend && npm install --include=dev && npm run build && cd ../backend && npm install --include=dev && npm run build"
+    startCommand: "cd backend && npx prisma db push && npm start"
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: NODE_ENV
+        value: production
+    
