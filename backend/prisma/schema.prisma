@@ -1,0 +1,66 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id         String   @id @default(uuid())
+  name       String   @unique
+  password   String
+  upiId      String?
+  email      String?
+  globalOptIn Boolean @default(true)
+  createdAt  DateTime @default(now())
+
+  groupMembers  GroupMember[]
+  expensesPaid  Expense[]
+  expenseSplits ExpenseSplit[]
+}
+
+model Group {
+  id              String   @id @default(uuid())
+  name            String
+  createdAt       DateTime @default(now())
+  createdByUserId String?
+
+  members  GroupMember[]
+  expenses Expense[]
+}
+
+model GroupMember {
+  group   Group  @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  groupId String
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String
+
+  @@id([groupId, userId])
+}
+
+model Expense {
+  id              String   @id @default(uuid())
+  group           Group?   @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  groupId         String?  // Nullable for 1-on-1 expenses
+  description     String
+  totalAmount     Float
+  status          String   @default("APPROVED") // "PENDING" | "APPROVED"
+  createdByUserId String?
+
+  paidBy        User     @relation(fields: [paidByUserId], references: [id], onDelete: Cascade)
+  paidByUserId  String
+  date          DateTime @default(now())
+
+  splits        ExpenseSplit[]
+}
+
+model ExpenseSplit {
+  id          String  @id @default(uuid())
+  expense     Expense @relation(fields: [expenseId], references: [id], onDelete: Cascade)
+  expenseId   String
+  user        User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId      String
+  amountOwed  Float
+}
